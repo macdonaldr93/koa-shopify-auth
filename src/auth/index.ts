@@ -1,6 +1,6 @@
-import {Context} from 'koa';
+import { Context } from 'koa';
 
-import {OAuthStartOptions, AccessMode, NextFunction} from '../types';
+import { OAuthStartOptions, AccessMode, NextFunction } from '../types';
 
 import createOAuthStart from './create-oauth-start';
 import createOAuthCallback from './create-oauth-callback';
@@ -16,15 +16,15 @@ export const TEST_COOKIE_NAME = 'shopifyTestCookie';
 export const GRANTED_STORAGE_ACCESS_COOKIE_NAME =
   'shopify.granted_storage_access';
 
-function hasCookieAccess({cookies}: Context) {
+function hasCookieAccess({ cookies }: Context) {
   return Boolean(cookies.get(TEST_COOKIE_NAME));
 }
 
-function grantedStorageAccess({cookies}: Context) {
+function grantedStorageAccess({ cookies }: Context) {
   return Boolean(cookies.get(GRANTED_STORAGE_ACCESS_COOKIE_NAME));
 }
 
-function shouldPerformInlineOAuth({cookies}: Context) {
+function shouldPerformInlineOAuth({ cookies }: Context) {
   return Boolean(cookies.get(TOP_LEVEL_OAUTH_COOKIE_NAME));
 }
 
@@ -37,7 +37,7 @@ export default function createShopifyAuth(options: OAuthStartOptions) {
     ...options,
   };
 
-  const {prefix} = config;
+  const { prefix } = config;
 
   const oAuthStartPath = `${prefix}/auth`;
   const oAuthCallbackPath = `${oAuthStartPath}/callback`;
@@ -51,7 +51,6 @@ export default function createShopifyAuth(options: OAuthStartOptions) {
     inlineOAuthPath,
   );
 
-  const enableCookiesPath = `${oAuthStartPath}/enable_cookies`;
   const enableCookies = createEnableCookies(config);
   const requestStorageAccess = createRequestStorageAccess(config);
 
@@ -59,7 +58,7 @@ export default function createShopifyAuth(options: OAuthStartOptions) {
     ctx.cookies.secure = true;
 
     if (
-      ctx.path === oAuthStartPath &&
+      ctx.path === '/auth' &&
       !hasCookieAccess(ctx) &&
       !grantedStorageAccess(ctx)
     ) {
@@ -68,24 +67,24 @@ export default function createShopifyAuth(options: OAuthStartOptions) {
     }
 
     if (
-      ctx.path === inlineOAuthPath ||
-      (ctx.path === oAuthStartPath && shouldPerformInlineOAuth(ctx))
+      ctx.path === '/auth/inline' ||
+      (ctx.path === '/auth' && shouldPerformInlineOAuth(ctx))
     ) {
       await oAuthStart(ctx);
       return;
     }
 
-    if (ctx.path === oAuthStartPath) {
+    if (ctx.path === '/auth') {
       await topLevelOAuthRedirect(ctx);
       return;
     }
 
-    if (ctx.path === oAuthCallbackPath) {
+    if (ctx.path === '/auth/callback') {
       await oAuthCallback(ctx);
       return;
     }
 
-    if (ctx.path === enableCookiesPath) {
+    if (ctx.path === '/auth/callback/enable_cookies') {
       await enableCookies(ctx);
       return;
     }
@@ -94,5 +93,5 @@ export default function createShopifyAuth(options: OAuthStartOptions) {
   };
 }
 
-export {default as Error} from './errors';
-export {default as validateHMAC} from './validate-hmac';
+export { default as Error } from './errors';
+export { default as validateHMAC } from './validate-hmac';
