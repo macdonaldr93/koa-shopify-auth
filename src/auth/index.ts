@@ -15,6 +15,10 @@ export const TOP_LEVEL_OAUTH_COOKIE_NAME = 'shopifyTopLevelOAuth';
 export const TEST_COOKIE_NAME = 'shopifyTestCookie';
 export const GRANTED_STORAGE_ACCESS_COOKIE_NAME =
   'shopify.granted_storage_access';
+export const OAUTH_START_PATH = '/auth';
+export const OAUTH_INLINE_PATH = '/auth/inline';
+export const OAUTH_CALLBACK_PATH = '/auth/callback';
+export const OAUTH_ENABLE_COOKIES_PATH = '/auth/callback/enable_cookies';
 
 function hasCookieAccess({ cookies }: Context) {
   return Boolean(cookies.get(TEST_COOKIE_NAME));
@@ -58,7 +62,7 @@ export default function createShopifyAuth(options: OAuthStartOptions) {
     ctx.cookies.secure = true;
 
     if (
-      ctx.path === '/auth' &&
+      ctx.path === OAUTH_START_PATH &&
       !hasCookieAccess(ctx) &&
       !grantedStorageAccess(ctx)
     ) {
@@ -67,24 +71,24 @@ export default function createShopifyAuth(options: OAuthStartOptions) {
     }
 
     if (
-      ctx.path === '/auth/inline' ||
-      (ctx.path === '/auth' && shouldPerformInlineOAuth(ctx))
+      ctx.path === OAUTH_INLINE_PATH ||
+      (ctx.path === OAUTH_START_PATH && shouldPerformInlineOAuth(ctx))
     ) {
       await oAuthStart(ctx);
       return;
     }
 
-    if (ctx.path === '/auth') {
+    if (ctx.path === OAUTH_START_PATH) {
       await topLevelOAuthRedirect(ctx);
       return;
     }
 
-    if (ctx.path === '/auth/callback') {
+    if (ctx.path === OAUTH_CALLBACK_PATH) {
       await oAuthCallback(ctx);
       return;
     }
 
-    if (ctx.path === '/auth/callback/enable_cookies') {
+    if (ctx.path === OAUTH_ENABLE_COOKIES_PATH) {
       await enableCookies(ctx);
       return;
     }
